@@ -1,0 +1,51 @@
+{
+    "schemaVersion": 1,
+    "id": "elytrahud",
+    "version": "1.1.0",
+
+    "name": "ElytraHud (MFS 2020)",
+    "description": "Microsoft flight simulator HUD for Minecraft elytras",
+    "authors": [
+        "jewtvet"
+    ],
+    "contact": {
+        "homepage": "https://modrinth.com/mod/elytra-hud",
+        "issues": "https://github.com/jewtvet/elytrahud/issues"
+    },
+
+    "license": "MIT",
+    "icon": "assets/elytrahud/icon.png",
+
+    "environment": "client",
+    "entrypoints": {
+        "client": [
+          "jewtvet.elytrahud.Common"
+        ],
+        "modmenu": [
+            "jewtvet.elytrahud.ElytraHudModMenu"
+        ]
+    },
+    "mixins": [
+        "elytrahud.mixins.json"
+    ],
+    "depends": {
+        "fabric-language-kotlin": ">=1.13.1",
+        "fabricloader": ">=0.16.14",
+        "fabric": "*",
+        "minecraft": ">=1.21.8",
+        "java": ">=21",
+        "cloth-config2": ">=19.0"
+    },
+    "suggests": {
+		"modmenu": ">=7.2.2"
+	},
+    "custom": {
+        "modmenu:api": "jewtvet.elytrahud.ElytraHudModMenu",
+        "modmenu": {
+            "links": {
+                "modmenu.curseforge": "https://legacy.curseforge.com/minecraft/mc-mods/elytra-hud-like-mfs-2020",
+                "modmenu.modrinth": "https://modrinth.com/mod/elytra-hud"
+            }
+        }
+    }
+}
