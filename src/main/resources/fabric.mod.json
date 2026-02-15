@@ -9,8 +9,8 @@
         "jewtvet"
     ],
     "contact": {
-        "homepage": "https://modrinth.com/mod/elytra-hud",
-        "issues": "https://github.com/jewtvet/elytrahud/issues"
+        "homepage": "https://modrinth.com/mod/elytra-hud-rework",
+        "issues": "https://github.com/wancor1/elytrahud-rework/issues"
     },
 
     "license": "MIT",
@@ -43,8 +43,7 @@
         "modmenu:api": "jewtvet.elytrahud.ElytraHudModMenu",
         "modmenu": {
             "links": {
-                "modmenu.curseforge": "https://legacy.curseforge.com/minecraft/mc-mods/elytra-hud-like-mfs-2020",
-                "modmenu.modrinth": "https://modrinth.com/mod/elytra-hud"
+                "modmenu.modrinth": "https://modrinth.com/mod/elytra-hud-rework"
             }
         }
     }
