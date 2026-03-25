@@ -10,3 +10,7 @@ run
 .idea
 *.zip
 *.txt
+nul
+.project
+.settings
+.classpath
