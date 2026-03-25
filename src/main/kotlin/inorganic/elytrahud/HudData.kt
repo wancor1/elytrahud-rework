@@ -1,27 +1,17 @@
-package jewtvet.elytrahud
+package inorganic.elytrahud
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.entity.EquipmentSlot
-import java.lang.reflect.Method
+import net.minecraft.client.Minecraft
+import net.minecraft.world.entity.EquipmentSlot
 
 class HudData {
-    var speed = 0.0
-        private set
-    var verticalSpeed = 0.0
-        private set
-    var durability = 1.0
-        private set
-    var currentDurability = 0
-        private set
-    var height = 0.0
-        private set
-    var yaw = 180.0
-        private set
-    var pitch = 0.0
-        private set
-    var roll = 0.0f
-        private set
+    @JvmField var speed = 0.0
+    @JvmField var verticalSpeed = 0.0
+    @JvmField var durability = 1.0
+    @JvmField var currentDurability = 0
+    @JvmField var height = 0.0
+    @JvmField var yaw = 180.0
+    @JvmField var pitch = 0.0
+    @JvmField var roll = 0.0f
 
     private var prevYPosition: Double? = null
 
@@ -29,22 +19,26 @@ class HudData {
         val client = Common.client ?: return
         val player = client.player ?: return
 
-        speed = player.velocity.length() * 20.0
-        
-        val currentYPosition = player.y
-        verticalSpeed = prevYPosition?.let { (currentYPosition - it) * 20.0 } ?: 0.0
+        speed = player.deltaMovement.length() * 20.0
+
+        val currentYPosition = player.getY()
+        if (prevYPosition != null) {
+            verticalSpeed = (currentYPosition - prevYPosition!!) * 20.0
+        } else {
+            verticalSpeed = 0.0
+        }
         prevYPosition = currentYPosition
 
-        height = player.y
-        yaw = player.yaw.toDouble()
-        pitch = player.pitch.toDouble()
+        height = player.getY()
+        yaw = player.getYRot().toDouble()
+        pitch = player.getXRot().toDouble()
         roll = getRoll(client)
-        
-        val chestSlot = player.getEquippedStack(EquipmentSlot.CHEST)
-        if (!chestSlot.isEmpty && chestSlot.contains(DataComponentTypes.GLIDER)) {
+
+        val chestSlot = player.getItemBySlot(EquipmentSlot.CHEST)
+        if (!chestSlot.isEmpty && chestSlot.item == net.minecraft.world.item.Items.ELYTRA) {
             val maxDamage = chestSlot.maxDamage
             if (maxDamage > 0) {
-                currentDurability = maxDamage - chestSlot.damage
+                currentDurability = maxDamage - chestSlot.damageValue
                 durability = currentDurability.toDouble() / maxDamage
             } else {
                 currentDurability = 0
@@ -58,13 +52,13 @@ class HudData {
 
     companion object {
         private var methodChecked = false
-        private var getRollMethod: Method? = null
+        private var getRollMethod: java.lang.reflect.Method? = null
 
-        private fun checkForDoABarrelRollMethod(client: MinecraftClient) {
+        private fun checkForDoABarrelRollMethod(client: Minecraft) {
             try {
                 val cameraEntity = client.cameraEntity
                 if (cameraEntity != null) {
-                    getRollMethod = cameraEntity.javaClass.getMethod("doABarrelRoll\$getRoll")
+                    getRollMethod = cameraEntity.javaClass.getMethod("getRoll")
                 }
             } catch (e: NoSuchMethodException) {
                 getRollMethod = null
@@ -72,18 +66,22 @@ class HudData {
             methodChecked = true
         }
 
-        fun getRoll(client: MinecraftClient): Float {
+        fun getRoll(client: Minecraft): Float {
             if (!methodChecked) {
                 checkForDoABarrelRollMethod(client)
             }
 
-            return getRollMethod?.let { method ->
+            if (getRollMethod != null) {
                 try {
-                    client.cameraEntity?.let { method.invoke(it) as Float }
+                    val cameraEntity = client.cameraEntity
+                    if (cameraEntity != null) {
+                        return getRollMethod!!.invoke(cameraEntity) as Float
+                    }
                 } catch (e: Exception) {
-                    null
+                    // Ignore
                 }
-            } ?: 0.0f
+            }
+            return 0.0f
         }
     }
 }

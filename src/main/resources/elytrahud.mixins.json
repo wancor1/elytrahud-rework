@@ -1,12 +1,11 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "jewtvet.elytrahud.mixin",
+  "package": "inorganic.elytrahud.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
-    "PlayerEntityMixin",
-    "LivingEntityMixin"
+    "PlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

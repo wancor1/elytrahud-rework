@@ -1,137 +1,96 @@
-package jewtvet.elytrahud
+package inorganic.elytrahud
 
-import me.shedaniel.autoconfig.AutoConfig
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.option.Perspective
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.screen.slot.SlotActionType
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.resources.Identifier
 
-class Common : ClientModInitializer {
+object Common : ClientModInitializer {
+    @JvmField var CONFIG: ElytraHudConfig? = null
+    const val MODID = "elytrahud"
+    @JvmField var hudData = HudData()
+    @JvmField var client: Minecraft? = null
+    @JvmField var isFlying = false
+    @JvmField var hudRenderer: HudRenderer? = null
+
     private var hasEnteredWorld = false
 
     override fun onInitializeClient() {
-        AutoConfig.register(ElytraHudConfig::class.java, ::GsonConfigSerializer)
-        val configHolder = AutoConfig.getConfigHolder(ElytraHudConfig::class.java)
-        CONFIG = configHolder.config
-        
+        CONFIG = ElytraHudConfig()
+        val config = ConfigManager.getConfig()
+        config.modEnabled = CONFIG!!.modEnabled
+        config.renderTitles = CONFIG!!.renderTitles
+        config.renderValues = CONFIG!!.renderValues
+        config.renderAirspeed = CONFIG!!.renderAirspeed
+        config.renderHorizon = CONFIG!!.renderHorizon
+        config.renderDurability = CONFIG!!.renderDurability
+        config.renderAltitude = CONFIG!!.renderAltitude
+        config.renderVertical = CONFIG!!.renderVertical
+        config.renderCompass = CONFIG!!.renderCompass
+        config.alwaysDisplayHud = CONFIG!!.alwaysDisplayHud
+        ConfigManager.save()
+
         hudData = HudData()
-        originalFov = CONFIG!!.defaultFov
-        client = MinecraftClient.getInstance()
+        client = Minecraft.getInstance()
         hudRenderer = HudRenderer(client!!)
 
-        ClientTickEvents.START_CLIENT_TICK.register(ClientTickEvents.StartTick {
-            val config = CONFIG ?: return@StartTick
-            if (config.modEnabled) {
-                if (client!!.world != null && !hasEnteredWorld) {
-                    hasEnteredWorld = true
-                    if (client!!.player != null) {
-                        setDefaultSetting(client!!)
-                    }
-                } else if (client!!.world == null && hasEnteredWorld) {
-                    hasEnteredWorld = false
-                }
+        ClientTickEvents.START_CLIENT_TICK.register { c ->
+            if (CONFIG == null || !ConfigManager.getConfig().modEnabled) {
+                return@register
             }
-        })
+            if (c.level != null && !hasEnteredWorld) {
+                hasEnteredWorld = true
+                if (c.player != null) {
+                    setDefaultSetting(c)
+                }
+            } else if (c.level == null && hasEnteredWorld) {
+                hasEnteredWorld = false
+            }
+        }
 
-        ClientTickEvents.END_WORLD_TICK.register(ClientTickEvents.EndWorldTick {
-            val player = client!!.player
-            val config = CONFIG ?: return@EndWorldTick
+        ClientTickEvents.END_LEVEL_TICK.register { _ ->
+            val mc = Minecraft.getInstance()
+            val player = mc.player
+            if (player == null || CONFIG == null || !ConfigManager.getConfig().modEnabled) {
+                return@register
+            }
+
+            if (player.isFallFlying()) {
+                hudData.update()
+                isFlying = true
+            } else if (isFlying) {
+                isFlying = false
+            }
             
-            if (player != null && config.modEnabled) {
-                if (player.isGliding) {
-                    hudData.update()
-                } else if (isFlying) {
-                    isFlying = false
-                    val options = client!!.options
-                    if (config.thirdPersonEnabled) {
-                        options.perspective = originalPerspective
-                    }
-
-                    if (config.highFovEnabled) {
-                        options.fov.value = originalFov
-                    }
-
-                    if (config.pumpkinEnabled) {
-                        val itemsToFind = arrayOf(
-                            Items.CARVED_PUMPKIN,
-                            Items.LEATHER_HELMET,
-                            Items.CHAINMAIL_HELMET,
-                            Items.IRON_HELMET,
-                            Items.GOLDEN_HELMET,
-                            Items.DIAMOND_HELMET,
-                            Items.NETHERITE_HELMET
-                        )
-                        findInHotbar(client!!, itemsToFind)
-                    }
-                }
+            // Always update HUD data if alwaysDisplayHud is enabled
+            if (ConfigManager.getConfig().alwaysDisplayHud) {
+                hudData.update()
             }
-        })
-
-        HudRenderCallback.EVENT.register(HudRenderCallback { graphics, tickDelta ->
-            val config = CONFIG ?: return@HudRenderCallback
-            if (config.modEnabled && isFlying && client!!.currentScreen !is InventoryScreen) {
-                hudRenderer!!.render(graphics, tickDelta.getTickProgress(true))
-            }
-        })
-    }
-
-    private fun setDefaultSetting(client: MinecraftClient) {
-        val options = client.options
-        val config = CONFIG ?: return
-        if (client.player != null && client.player!!.isGliding && config.defaultFov != 32) {
-            options.fov.value = config.defaultFov
         }
 
-        if (config.defaultFov == 32) {
-            config.defaultFov = options.fov.value
+        HudElementRegistry.attachElementBefore(
+            VanillaHudElements.HOTBAR,
+            Identifier.fromNamespaceAndPath(MODID, "hud")
+        ) { graphics, tickDelta ->
+            if (CONFIG == null || !ConfigManager.getConfig().modEnabled || client!!.screen is InventoryScreen) {
+                return@attachElementBefore
+            }
+            val player = client!!.player
+            if (player == null) {
+                return@attachElementBefore
+            }
+            if (!ConfigManager.getConfig().alwaysDisplayHud && !player.isFallFlying()) {
+                return@attachElementBefore
+            }
+            hudRenderer!!.render(graphics, tickDelta)
         }
     }
 
-    companion object {
-        @JvmField
-        var CONFIG: ElytraHudConfig? = null
-        const val MODID = "elytrahud"
-        @JvmField
-        var hudData = HudData()
-        @JvmField
-        var client: MinecraftClient? = null
-        @JvmField
-        var isFlying = false
-        @JvmField
-        var hudRenderer: HudRenderer? = null
-        @JvmField
-        var originalFov = 90
-        @JvmField
-        var originalPerspective = Perspective.FIRST_PERSON
-
-        @JvmStatic
-        fun findInHotbar(client: MinecraftClient, items: Array<Item>) {
-            val player = client.player ?: return
-
-            for (item in items) {
-                for (i in 0..8) {
-                    val stack = player.inventory.getStack(i)
-                    if (stack.item === item) {
-                        val interactionManager = MinecraftClient.getInstance().interactionManager
-                        if (interactionManager != null) {
-                            interactionManager.clickSlot(
-                                player.currentScreenHandler.syncId,
-                                5,
-                                i,
-                                SlotActionType.SWAP,
-                                player
-                            )
-                        }
-                        return
-                    }
-                }
-            }
-        }
+    private fun setDefaultSetting(client: Minecraft) {
+        // No camera effects to set
     }
 }
