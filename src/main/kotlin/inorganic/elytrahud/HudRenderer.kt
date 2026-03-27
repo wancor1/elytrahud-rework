@@ -101,9 +101,7 @@ class HudRenderer(private val client: Minecraft) {
         }
 
         if (config.renderCompass) {
-            val compassScreen = scaledWidth - 120
-            val compassOffset = config.compassDefaultX / 100.0 * compassScreen
-            val compassX = kotlin.math.round(compassOffset).toInt() + 10
+            val compassX = 10
             val compassY = 15
 
             renderCompass(graphics, compassX + 50, compassY + 50, Math.toRadians(displayedYaw).toFloat())
@@ -166,7 +164,7 @@ class HudRenderer(private val client: Minecraft) {
 
         val horizonY = 41 + pitchOffset
         graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, centerX - 25, yPos, 100f, 100f, 50, 50, 256, 256, -1)
-        
+
         val horizonList = listOf(
             Triple(1, 10, 20),
             Triple(1, 16, 17),
@@ -182,13 +180,13 @@ class HudRenderer(private val client: Minecraft) {
             Triple(3, 42, 4),
             Triple(5, 44, 3)
         )
-        
+
         var horizonX = 0
         for (row in horizonList) {
             graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, centerX - 22 + horizonX, yPos + 3 - 3 + row.third, 170f + horizonX, (horizonY + row.third).toFloat(), row.first, row.second, 256, 256, -1)
             horizonX += row.first
         }
-        
+
         for (row in horizonList.reversed()) {
             graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, WIDGETS_TEXTURE, centerX - 22 + horizonX, yPos + 3 - 3 + row.third, 170f + horizonX, (horizonY + row.third).toFloat(), row.first, row.second, 256, 256, -1)
             horizonX += row.first
@@ -250,7 +248,7 @@ private fun renderBar(graphics: GuiGraphicsExtractor, x: Int, yPos: Int, yCoordi
 
     private fun renderCompass(graphics: GuiGraphicsExtractor, centerX: Int, centerY: Int, angleRadians: Float) {
         val matrices = graphics.pose()
-        
+
         matrices.pushMatrix()
         matrices.translate(centerX.toFloat(), centerY.toFloat())
         matrices.rotate(angleRadians)

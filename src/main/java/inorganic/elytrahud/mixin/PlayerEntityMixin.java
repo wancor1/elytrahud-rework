@@ -1,8 +1,6 @@
 package inorganic.elytrahud.mixin;
 
-import inorganic.elytrahud.Common;
-import inorganic.elytrahud.HudData;
-import inorganic.elytrahud.ConfigManager;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,12 +17,12 @@ public abstract class PlayerEntityMixin {
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo info) {
         Player player = (Player)(Object)this;
-        if (Common.CONFIG != null && ConfigManager.getConfig().modEnabled) {
+        if (inorganic.elytrahud.ConfigManager.getConfig().modEnabled) {
             Minecraft client = Minecraft.getInstance();
             if (player.equals(client.player) && client.level != null) {
                 boolean isElytraOpen = player.isFallFlying();
                 if (isElytraOpen && !this.wasElytraFlying) {
-                    Common.isFlying = true;
+                    inorganic.elytrahud.Common.isFlying = true;
                     this.wasElytraFlying = true;
                 } else if (!isElytraOpen && this.wasElytraFlying) {
                     this.wasElytraFlying = false;

@@ -20,26 +20,14 @@ object Common : ClientModInitializer {
     private var hasEnteredWorld = false
 
     override fun onInitializeClient() {
-        CONFIG = ElytraHudConfig()
-        val config = ConfigManager.getConfig()
-        config.modEnabled = CONFIG!!.modEnabled
-        config.renderTitles = CONFIG!!.renderTitles
-        config.renderValues = CONFIG!!.renderValues
-        config.renderAirspeed = CONFIG!!.renderAirspeed
-        config.renderHorizon = CONFIG!!.renderHorizon
-        config.renderDurability = CONFIG!!.renderDurability
-        config.renderAltitude = CONFIG!!.renderAltitude
-        config.renderVertical = CONFIG!!.renderVertical
-        config.renderCompass = CONFIG!!.renderCompass
-        config.alwaysDisplayHud = CONFIG!!.alwaysDisplayHud
-        ConfigManager.save()
+        CONFIG = ConfigManager.getConfig()
 
         hudData = HudData()
         client = Minecraft.getInstance()
         hudRenderer = HudRenderer(client!!)
 
         ClientTickEvents.START_CLIENT_TICK.register { c ->
-            if (CONFIG == null || !ConfigManager.getConfig().modEnabled) {
+            if (CONFIG == null || !CONFIG!!.modEnabled) {
                 return@register
             }
             if (c.level != null && !hasEnteredWorld) {
@@ -55,7 +43,7 @@ object Common : ClientModInitializer {
         ClientTickEvents.END_LEVEL_TICK.register { _ ->
             val mc = Minecraft.getInstance()
             val player = mc.player
-            if (player == null || CONFIG == null || !ConfigManager.getConfig().modEnabled) {
+            if (player == null || CONFIG == null || !CONFIG!!.modEnabled) {
                 return@register
             }
 
@@ -67,7 +55,7 @@ object Common : ClientModInitializer {
             }
             
             // Always update HUD data if alwaysDisplayHud is enabled
-            if (ConfigManager.getConfig().alwaysDisplayHud) {
+            if (CONFIG!!.alwaysDisplayHud) {
                 hudData.update()
             }
         }
@@ -76,14 +64,14 @@ object Common : ClientModInitializer {
             VanillaHudElements.HOTBAR,
             Identifier.fromNamespaceAndPath(MODID, "hud")
         ) { graphics, tickDelta ->
-            if (CONFIG == null || !ConfigManager.getConfig().modEnabled || client!!.screen is InventoryScreen) {
+            if (CONFIG == null || !CONFIG!!.modEnabled || client!!.screen is InventoryScreen) {
                 return@attachElementBefore
             }
             val player = client!!.player
             if (player == null) {
                 return@attachElementBefore
             }
-            if (!ConfigManager.getConfig().alwaysDisplayHud && !player.isFallFlying()) {
+            if (!CONFIG!!.alwaysDisplayHud && !player.isFallFlying()) {
                 return@attachElementBefore
             }
             hudRenderer!!.render(graphics, tickDelta)

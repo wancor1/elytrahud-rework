@@ -12,7 +12,6 @@ base {
 }
 
 repositories {
-    maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/" }
     maven { url "https://maven.fabricmc.net/" }
     maven { url = "https://maven.terraformersmc.com/" }
@@ -22,17 +21,17 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    
+
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    
+
     implementation("net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}")
 
     api("com.terraformersmc:modmenu:${project.mod_menu_version}")
 
     implementation("dev.isxander:yet-another-config-lib:${project.yacl_version}")
-    
+
     include("org.jetbrains.kotlin:kotlin-stdlib:${project.kotlin_version}")
     include("net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}")
 }
